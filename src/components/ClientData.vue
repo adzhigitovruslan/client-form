@@ -2,38 +2,116 @@
     <div class="form__wrapper">
         <div class="form__input-container">
             <label class="form__label">
-                Фамилия
-                <input type="text" />
+                Фамилия*
+                <input
+                    type="text"
+                    v-model.trim="formData.surname"
+                    @blur="$v.formData.stepOne.surname.$touch()"
+                    :class="{
+                        error:
+                            $v.formData.stepOne.surname.$dirty &&
+                            !$v.formData.stepOne.surname.required,
+                    }" />
             </label>
+            <div
+                class="form__label-error"
+                v-if="
+                    $v.formData.stepOne.surname.$dirty && !$v.formData.stepOne.surname.required
+                ">
+                Введите значение
+            </div>
         </div>
         <div class="form__input-container">
             <label class="form__label">
-                Имя
-                <input type="text" />
+                Имя*
+                <input
+                    type="text"
+                    v-model.trim="formData.name"
+                    @blur="$v.formData.stepOne.name.$touch()"
+                    :class="{
+                        error:
+                            $v.formData.stepOne.name.$dirty &&
+                            !$v.formData.stepOne.name.required,
+                    }" />
             </label>
+            <div
+                class="form__label-error"
+                v-if="$v.formData.stepOne.name.$dirty && !$v.formData.stepOne.name.required">
+                Введите значение
+            </div>
         </div>
         <div class="form__input-container">
             <label class="form__label">
                 Отчество
-                <input type="text" />
+                <input type="text" v-model.trim="formData.middleName" />
             </label>
         </div>
         <div class="form__input-container">
             <label class="form__label">
-                Дата рождения
-                <input type="date" />
+                Дата рождения*
+                <input
+                    type="date"
+                    v-model.trim="formData.dateOfBirth"
+                    @blur="$v.formData.stepOne.dateOfBirth.$touch()"
+                    :class="{
+                        error:
+                            $v.formData.stepOne.dateOfBirth.$dirty &&
+                            !$v.formData.stepOne.dateOfBirth.required,
+                    }" />
             </label>
+            <div
+                class="form__label-error"
+                v-if="
+                    $v.formData.stepOne.dateOfBirth.$dirty &&
+                    !$v.formData.stepOne.dateOfBirth.required
+                ">
+                Введите значение
+            </div>
         </div>
         <div class="form__input-container">
             <label class="form__label">
-                Номер телефона
-                <input type="number" />
+                Номер телефона*
+                <input
+                    type="number"
+                    placeholder="e.g. 7 (999) 500 1000"
+                    v-model.trim="formData.phoneNumber"
+                    @blur="$v.formData.stepOne.phoneNumber.$touch()"
+                    :class="{
+                        error:
+                            ($v.formData.stepOne.phoneNumber.$dirty &&
+                                !$v.formData.stepOne.phoneNumber.required) ||
+                            ($v.formData.stepOne.phoneNumber.$dirty &&
+                                !$v.formData.stepOne.phoneNumber.minLength) ||
+                            ($v.formData.stepOne.phoneNumber.$dirty &&
+                                !$v.formData.stepOne.phoneNumber.maxLength),
+                    }" />
             </label>
+            <div
+                class="form__label-error"
+                v-if="
+                    $v.formData.stepOne.phoneNumber.$dirty &&
+                    !$v.formData.stepOne.phoneNumber.required
+                ">
+                Введите значение
+            </div>
+            <div
+                class="form__label-error"
+                v-if="
+                    ($v.formData.stepOne.phoneNumber.$dirty &&
+                        !$v.formData.stepOne.phoneNumber.minLength) ||
+                    ($v.formData.stepOne.phoneNumber.$dirty &&
+                        !$v.formData.stepOne.phoneNumber.maxLength)
+                ">
+                Номер должен состоять из
+                {{ $v.formData.stepOne.phoneNumber.$params.minLength.min }} цифр. Сейчас
+                он
+                {{ formData.phoneNumber.length }}
+            </div>
         </div>
         <div class="form__input-container">
             <label class="form__label">
                 Пол
-                <input type="text" />
+                <input type="text" v-model.trim="formData.sex" />
             </label>
         </div>
         <div class="form__input-container">
@@ -42,21 +120,34 @@
                 multiSelect
                 :value="'id'"
                 :name="'name'"
-                text="Группа клиентов"
-                :model="selectedGroups"
-                @update:model="selectedGroups = $event" />
+                text="Группа клиентов*"
+                :$v="$v"
+                :model="formData.selectedGroupClient"
+                @update:model="formData.selectedGroupClient = $event" />
+            <div
+                class="form__label-error"
+                v-if="
+                    $v.formData.stepOne.selectedGroupClient.$dirty &&
+                    !$v.formData.stepOne.selectedGroupClient.required
+                ">
+                Выберите значение
+            </div>
         </div>
         <div class="form__input-container">
             <DropDown
-                :data="doctors"
+                :data="doctorsList"
                 :value="'id'"
                 :name="'name'"
                 text="Лечащий врач"
-                :model="selectedDoctor"
-                @update:model="selectedDoctor = $event" />
+                :model="formData.selectedDoctor"
+                @update:model="formData.selectedDoctor = $event" />
         </div>
         <div class="checkbox__container">
-            <input type="checkbox" id="cbx" class="cbx" />
+            <input
+                type="checkbox"
+                id="cbx"
+                class="cbx"
+                v-model="formData.checkbox" />
             <label for="cbx" class="check">
                 Не отправлять СМС
                 <svg width="18px" height="18px" viewBox="0 0 18 18">
@@ -66,7 +157,6 @@
                 </svg>
             </label>
         </div>
-        <button type="submit" class="form__submit">Next</button>
     </div>
 </template>
 
@@ -78,21 +168,33 @@ export default {
     components: {
         DropDown,
     },
+    props: {
+        value: {
+            type: Object,
+        },
+        $v: {
+            type: Object,
+        },
+    },
+    emits: ["update:value"],
     data() {
         return {
-            selectedDoctor: "",
-            selectedGroups: [],
             groupClient: [
                 { id: "VIP", name: "VIP" },
                 { id: "Проблемные", name: "Проблемные" },
                 { id: "ОМС", name: "ОМС" },
             ],
-            doctors: [
+            doctorsList: [
                 { id: "Иванов", name: "Иванов" },
                 { id: "Захаров", name: "Захаров" },
                 { id: "Чернышева", name: "Чернышева" },
             ],
         };
+    },
+    computed: {
+        formData() {
+            return this.value;
+        },
     },
 };
 </script>
@@ -142,22 +244,19 @@ export default {
         position: relative;
         display: flex;
         flex-direction: column;
-    }
-    &__submit {
-        display: block;
-        padding: 10px 15px;
-        background-color: #4285f4;
-        color: #ffffff;
-        line-height: 1.25;
-        font-weight: 500;
-        width: 100%;
-        border-radius: 15px;
-        text-transform: uppercase;
+        &-error {
+            position: absolute;
+            margin-top: 2px;
+            font-size: 14px;
+            color: #e61919;
+        }
+        & .error {
+            border-color: #e61919;
+        }
     }
 }
 .check {
-    display: flex;
-    width: 100%;
+    display: inline-flex;
     align-items: center;
     gap: 10px;
     cursor: pointer;

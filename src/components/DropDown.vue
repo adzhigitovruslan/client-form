@@ -1,5 +1,5 @@
 <template>
-    <div :id="id" class="drop-down__wrapper" :class="type">
+    <div :id="id" class="drop-down__wrapper">
         <div v-if="text" class="drop-down__text">
             {{ text }}
         </div>
@@ -19,7 +19,9 @@
                     open_select: openSelect,
                     disabled: disabled,
                     multiSelect: multiSelect,
-                    error: error,
+                    error:
+                        $v?.formData.stepOne.selectedGroupClient.$dirty &&
+                        !$v?.formData.stepOne.selectedGroupClient.required,
                 }"
                 @click="changeOpenSelect">
                 <transition name="field">
@@ -124,13 +126,15 @@
 </template>
 
 <script>
-import _ from "lodash";
 import CheckboxComponent from "@/components/Checkbox";
 
 export default {
     name: "DropDown",
     components: { CheckboxComponent },
     props: {
+        $v: {
+            type: Object,
+        },
         text: {
             default: false,
             type: [String, Boolean],
@@ -163,10 +167,6 @@ export default {
             default: "id",
             type: String,
         },
-        search: {
-            default: false,
-            type: Boolean,
-        },
         error: {
             default: false,
             type: Boolean,
@@ -178,18 +178,6 @@ export default {
         model: {
             default: false,
             type: [Number, String, Array, Boolean],
-        },
-        type: {
-            default: "normal",
-            type: String,
-        },
-        sort: {
-            default: false,
-            type: [Array, Boolean],
-        },
-        filter: {
-            default: false,
-            type: [Object, Boolean],
         },
     },
     emits: ["update:model"],
@@ -216,58 +204,6 @@ export default {
                     }
                 }
                 data = Object.values(data);
-            }
-
-            if (this.filter) {
-                for (const key in this.filter) {
-                    if (
-                        typeof this.filter[key] === "object" &&
-                        key.includes("!")
-                    ) {
-                        const convertedKey = key.replace("!", "");
-                        data = data.filter(
-                            (item) =>
-                                !this.filter[key].includes(item[convertedKey])
-                        );
-                    } else if (typeof this.filter[key] === "object") {
-                        data = data.filter((item) =>
-                            this.filter[key].includes(item[key])
-                        );
-                    } else if (key.includes("!")) {
-                        const convertedKey = key.replace("!", "");
-                        data = data.filter(
-                            (item) => item[convertedKey] !== this.filter[key]
-                        );
-                    } else {
-                        data = data.filter(
-                            (item) => item[key] === this.filter[key]
-                        );
-                    }
-                }
-            }
-
-            if (this.searchText && this.searchText.length > 0) {
-                const search = this.searchText.toLowerCase();
-                const searchData = [];
-                data.forEach((item) => {
-                    if (typeof this.name === "object") {
-                        let name = "";
-                        this.name.forEach((itemName, ind) => {
-                            name += item[itemName];
-                            if (ind !== this.name.length - 1) name += " ";
-                        });
-                        if (name.toLowerCase().includes(search)) {
-                            searchData.push(item);
-                        }
-                    } else if (item[this.name].toLowerCase().includes(search)) {
-                        searchData.push(item);
-                    }
-                });
-                data = searchData;
-            }
-
-            if (this.sort && this.sort.key && this.sort.ordered) {
-                data = _.orderBy(data, this.sort.key, this.sort.ordered);
             }
 
             return data;
@@ -319,25 +255,14 @@ export default {
         this.getId();
     },
     methods: {
-        //--------------------------------------------------------------------------------------------
-        // Присваивает уникальный ид для компонента.
-        //--------------------------------------------------------------------------------------------
         getId() {
             this.id = "drop_down_id_" + Math.random().toString(16).slice(2);
         },
-
-        //--------------------------------------------------------------------------------------------
-        // Закрывает выпадающий список, если срабатывает прокрутка на странице.
-        //--------------------------------------------------------------------------------------------
         scrollPage() {
             window.addEventListener("scroll", () => {
                 this.openSelect = false;
             });
         },
-
-        //--------------------------------------------------------------------------------------------
-        // Удаление одного из значения, если включён режим multiSelect.
-        //--------------------------------------------------------------------------------------------
         deleteField(item) {
             let model = JSON.parse(JSON.stringify(this.model || []));
 
@@ -376,7 +301,6 @@ export default {
         changeModel(item) {
             if (this.multiSelect) {
                 let model = JSON.parse(JSON.stringify(this.model || []));
-
                 if (
                     this.model &&
                     Array.isArray(this.model) &&
@@ -393,6 +317,8 @@ export default {
                 ) {
                     model.push(item[this.value]);
                 }
+                if (this.$v)
+                    this.$v.formData.stepOne.selectedGroupClient.$touch();
                 this.$emit("update:model", model);
             } else {
                 this.$emit("update:model", item[this.value]);
@@ -414,14 +340,17 @@ export default {
         font-size: 16px;
         line-height: 19px;
     }
+    &__content {
+        position: relative;
+    }
     &__select {
         width: auto;
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
-        border-radius: 10px;
+        border-radius: 15px;
         background: #ffffff;
         overflow-y: auto;
         overflow-x: hidden;
-        position: fixed;
+        position: absolute;
         z-index: 10;
         min-width: 200px;
         min-height: 92px;
