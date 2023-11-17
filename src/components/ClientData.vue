@@ -16,7 +16,8 @@
             <div
                 class="form__label-error"
                 v-if="
-                    $v.formData.stepOne.surname.$dirty && !$v.formData.stepOne.surname.required
+                    $v.formData.stepOne.surname.$dirty &&
+                    !$v.formData.stepOne.surname.required
                 ">
                 Введите значение
             </div>
@@ -36,7 +37,10 @@
             </label>
             <div
                 class="form__label-error"
-                v-if="$v.formData.stepOne.name.$dirty && !$v.formData.stepOne.name.required">
+                v-if="
+                    $v.formData.stepOne.name.$dirty &&
+                    !$v.formData.stepOne.name.required
+                ">
                 Введите значение
             </div>
         </div>
@@ -103,8 +107,10 @@
                         !$v.formData.stepOne.phoneNumber.maxLength)
                 ">
                 Номер должен состоять из
-                {{ $v.formData.stepOne.phoneNumber.$params.minLength.min }} цифр. Сейчас
-                он
+                {{
+                    $v.formData.stepOne.phoneNumber.$params.minLength.min
+                }}
+                цифр. Сейчас он
                 {{ formData.phoneNumber.length }}
             </div>
         </div>
@@ -122,6 +128,7 @@
                 :name="'name'"
                 text="Группа клиентов*"
                 :$v="$v"
+                :page="page"
                 :model="formData.selectedGroupClient"
                 @update:model="formData.selectedGroupClient = $event" />
             <div
@@ -169,6 +176,9 @@ export default {
         DropDown,
     },
     props: {
+        page: {
+            type: Number,
+        },
         value: {
             type: Object,
         },

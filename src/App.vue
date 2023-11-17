@@ -2,37 +2,68 @@
     <div id="app">
         <div class="wrapper">
             <form class="form">
-                <template v-if="page === 1">
-                    <ClientData v-model="formData.stepOne" :$v="$v" />
-                    <button
-                        class="form__submit"
-                        @click.prevent="changeStep('next')">
-                        Next
-                    </button>
-                </template>
-                <template v-if="page === 2">
-                    <ClientDataStepTwo v-model="formData.stepTwo" :$v="$v" />
-                    <div class="form__buttons">
-                        <button
-                            class="form__submit"
-                            @click.prevent="changeStep('prev')">
-                            prev
-                        </button>
+                <transition mode="out-in">
+                    <div v-if="page === 1" key="step1">
+                        <ClientData
+                            v-model="formData.stepOne"
+                            :$v="$v"
+                            :page="page" />
                         <button
                             class="form__submit"
                             @click.prevent="changeStep('next')">
                             Next
                         </button>
                     </div>
-                </template>
+                    <div v-else-if="page === 2" key="step2">
+                        <ClientDataStepTwo
+                            v-model="formData.stepTwo"
+                            :$v="$v" />
+                        <div class="form__buttons">
+                            <button
+                                class="form__submit"
+                                @click.prevent="changeStep('prev')">
+                                Назад
+                            </button>
+                            <button
+                                class="form__submit"
+                                @click.prevent="changeStep('next')">
+                                Далее
+                            </button>
+                        </div>
+                    </div>
+                    <div v-else-if="page === 3" key="step3">
+                        <ClientDataStepThreeVue
+                            v-model="formData.stepThree"
+                            :$v="$v"
+                            :page="page" />
+                        <div class="form__buttons">
+                            <button
+                                class="form__submit"
+                                @click.prevent="changeStep('prev')">
+                                Назад
+                            </button>
+                            <button
+                                class="form__submit"
+                                @click.prevent="changeStep('submit')">
+                                Отправить
+                            </button>
+                        </div>
+                    </div>
+                </transition>
             </form>
         </div>
+        <transition mode="out-in">
+            <FormPopup @closePopup="closePopup" v-if="popup" />
+        </transition>
     </div>
 </template>
 
 <script>
 import ClientData from "./components/ClientData.vue";
 import ClientDataStepTwo from "./components/ClientDataStepTwo.vue";
+import ClientDataStepThreeVue from "./components/ClientDataStepThree.vue";
+import FormPopup from "./components/FormPopup.vue";
+
 import { required, minLength, maxLength } from "vuelidate/lib/validators";
 
 export default {
@@ -40,10 +71,13 @@ export default {
     components: {
         ClientData,
         ClientDataStepTwo,
+        ClientDataStepThreeVue,
+        FormPopup,
     },
     data() {
         return {
-            page: 2,
+            popup: false,
+            page: 1,
             formData: {
                 stepOne: {
                     name: "",
@@ -64,6 +98,13 @@ export default {
                     street: "",
                     house: "",
                 },
+                stepThree: {
+                    documentType: "",
+                    passportSeries: "",
+                    passportNumber: "",
+                    issuedBy: "",
+                    issueDate: "",
+                },
             },
         };
     },
@@ -80,16 +121,48 @@ export default {
                 dateOfBirth: { required },
                 selectedGroupClient: { required },
             },
+            stepTwo: {
+                city: { required },
+            },
+            stepThree: {
+                documentType: { required },
+                issueDate: { required },
+            },
         },
     },
     methods: {
         changeStep(step) {
+            if (
+                step === "next" &&
+                this.page === 1 &&
+                !this.$v.formData.stepOne.$invalid
+            ) {
+                this.page = 2;
+            } else if (
+                step === "next" &&
+                this.page === 2 &&
+                !this.$v.formData.stepTwo.$invalid
+            ) {
+                this.page = 3;
+            }
+            if (step === "prev" && this.page !== 1) this.page -= 1;
+            if (
+                step === "submit" &&
+                this.page === 3 &&
+                !this.$v.formData.stepThree.$invalid
+            ) {
+                this.popup = true;
+                setTimeout(() => {
+                    this.popup = false;
+                }, 2000);
+            }
             this.$v.$touch();
             if (this.$v.$invalid) {
                 return;
             }
-            if (step === "next") this.page += 1;
-            if (step === "prev" && this.page !== 1) this.page -= 1;
+        },
+        closePopup(value) {
+            this.popup = value;
         },
     },
 };
@@ -112,6 +185,7 @@ body {
     -moz-text-size-adjust: 100%;
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
+    box-sizing: border-box;
 }
 #app {
     min-height: 100%;
@@ -150,7 +224,13 @@ body {
             border-radius: 15px;
             margin-top: 25px;
             text-transform: uppercase;
+            transition: 0.2s;
             cursor: pointer;
+            &:hover {
+                -webkit-box-shadow: 4px 4px 8px 0px rgba(66, 133, 244, 0.4);
+                -moz-box-shadow: 4px 4px 8px 0px rgba(66, 133, 244, 0.4);
+                box-shadow: 4px 4px 8px 0px rgba(66, 133, 244, 0.4);
+            }
         }
         &__buttons {
             display: flex;
@@ -159,5 +239,17 @@ body {
             gap: 20px;
         }
     }
+}
+.v-enter-active,
+.v-leave-active {
+    transition: 0.3s;
+}
+.v-enter,
+.v-leave-to {
+    opacity: 0;
+}
+.v-enter-to,
+.v-leave-from {
+    opacity: 1;
 }
 </style>

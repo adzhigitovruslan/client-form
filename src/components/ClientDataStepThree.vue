@@ -1,61 +1,80 @@
 <template>
     <div class="form__wrapper">
         <div class="form__input-container">
+            <DropDown
+                :data="documentTypes"
+                :value="'id'"
+                :name="'name'"
+                :$v="$v"
+                :page="page"
+                text="Тип документа*"
+                :model="formData.documentType"
+                @update:model="formData.documentType = $event" />
+            <div
+                class="form__label-error"
+                v-if="
+                    $v.formData.stepThree.documentType.$dirty &&
+                    !$v.formData.stepThree.documentType.required
+                ">
+                Выберите значение
+            </div>
+        </div>
+
+        <div class="form__input-container">
             <label class="form__label">
-                Индекс
-                <input type="text" v-model.trim="formData.postalCode" />
+                Серия
+                <input type="text" v-model.trim="formData.passportSeries" />
             </label>
         </div>
         <div class="form__input-container">
             <label class="form__label">
-                Страна
-                <input type="text" v-model.trim="formData.country" />
+                Номер
+                <input type="text" v-model.trim="formData.passportNumber" />
             </label>
         </div>
         <div class="form__input-container">
             <label class="form__label">
-                Область
-                <input type="text" v-model.trim="formData.district" />
+                Кем выдан
+                <input type="text" v-model.trim="formData.issuedBy" />
             </label>
         </div>
         <div class="form__input-container">
             <label class="form__label">
-                Город*
+                Дата выдачи*
                 <input
-                    type="text"
-                    v-model.trim="formData.city"
-                    @blur="$v.formData.stepTwo.city.$touch()"
+                    type="date"
+                    v-model.trim="formData.issueDate"
+                    @blur="$v.formData.stepThree.issueDate.$touch()"
                     :class="{
                         error:
-                            $v.formData.stepTwo.city.$dirty &&
-                            !$v.formData.stepTwo.city.required,
+                            $v.formData.stepThree.issueDate.$dirty &&
+                            !$v.formData.stepThree.issueDate.required,
                     }" />
             </label>
             <div
                 class="form__label-error"
-                v-if="$v.formData.stepTwo.city.$dirty && !$v.formData.stepTwo.city.required">
+                v-if="
+                    $v.formData.stepThree.issueDate.$dirty &&
+                    !$v.formData.stepThree.issueDate.required
+                ">
                 Введите значение
             </div>
-        </div>
-        <div class="form__input-container">
-            <label class="form__label">
-                Улица
-                <input type="text" v-model.trim="formData.street" />
-            </label>
-        </div>
-        <div class="form__input-container">
-            <label class="form__label">
-                Дом
-                <input type="text" v-model.trim="formData.house" />
-            </label>
         </div>
     </div>
 </template>
 
 <script>
+import DropDown from "@/components/DropDown.vue";
+
 export default {
-    name: "ClientDataStep2",
+    name: "ClientDataStepThree",
+    components: {
+        DropDown,
+    },
     props: {
+        page: {
+            type: Number,
+        },
         value: {
             type: Object,
         },
@@ -65,7 +84,16 @@ export default {
     },
     emits: ["update:value"],
     data() {
-        return {};
+        return {
+            documentTypes: [
+                { id: "Паспорт", name: "Паспорт" },
+                {
+                    id: "Свидетельство о рождении",
+                    name: "Свидетельство о рождении",
+                },
+                { id: "Вод. удостоверение", name: "Вод. удостоверение" },
+            ],
+        };
     },
     computed: {
         formData() {

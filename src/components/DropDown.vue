@@ -20,8 +20,14 @@
                     disabled: disabled,
                     multiSelect: multiSelect,
                     error:
-                        $v?.formData.stepOne.selectedGroupClient.$dirty &&
-                        !$v?.formData.stepOne.selectedGroupClient.required,
+                        (page &&
+                            page === 1 &&
+                            $v?.formData.stepOne.selectedGroupClient.$dirty &&
+                            !$v?.formData.stepOne.selectedGroupClient.required) ||
+                        (page &&
+                            page === 3 &&
+                            $v?.formData.stepThree.documentType.$dirty &&
+                            !$v?.formData.stepThree.documentType.required),
                 }"
                 @click="changeOpenSelect">
                 <transition name="field">
@@ -132,6 +138,9 @@ export default {
     name: "DropDown",
     components: { CheckboxComponent },
     props: {
+        page: {
+            type: Number,
+        },
         $v: {
             type: Object,
         },
@@ -278,26 +287,14 @@ export default {
             }
             this.$emit("update:model", model);
         },
-
-        //--------------------------------------------------------------------------------------------
-        // Открыть или закрыть выпадающее меню.
-        //--------------------------------------------------------------------------------------------
         changeOpenSelect() {
             if (!this.disabled) {
                 this.openSelect = !this.openSelect;
             }
         },
-
-        //--------------------------------------------------------------------------------------------
-        // Очистить значение, если не включен multiSelect.
-        //--------------------------------------------------------------------------------------------
         clearField() {
-            this.$emit("update:model", false);
+            this.$emit("update:model", null);
         },
-
-        //--------------------------------------------------------------------------------------------
-        // Изменение значения.
-        //--------------------------------------------------------------------------------------------
         changeModel(item) {
             if (this.multiSelect) {
                 let model = JSON.parse(JSON.stringify(this.model || []));
