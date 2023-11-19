@@ -1,4 +1,18 @@
-# client-form
+## client-form
+
+<img src="./screenshot.png">
+
+### Link to the project: https://adzhigitovruslan.github.io/client-form/
+
+## Description
+
+This project is a test task designed for the Frontend Developer position
+
+## Tech stack
+
+- Vue2
+- Sass/SCSS
+- HTML
 
 ## Project setup
 ```
